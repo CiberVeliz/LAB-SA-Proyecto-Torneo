@@ -66,8 +66,6 @@ app.put('/partidas/:id', async function (req, res)
       return;
     }
 
-    let obj_marcador = JSON.parse(marcador);
-
     await db.get("SELECT COUNT(1) FROM Partida WHERE id = $id", {$id: id}, (error, row) => {
       if(row['COUNT(1)'] === 0)
       {
@@ -79,7 +77,7 @@ app.put('/partidas/:id', async function (req, res)
       {
         let query = 'UPDATE Partida SET ganador = ? WHERE id = ?';
 
-        db.run(query, [obj_marcador[0], id]);
+        db.run(query, [marcador[0], id]);
         console.log('Partida registrada correctamente.');
         res.status(201).send('Partida registrada correctamente.');
       }
