@@ -36,7 +36,7 @@ app.get('/generarPartida', function(req, res)
   let id = uuid.v4();
   console.log(id);
 
-  res.status(200);
+  res.status(200).send('YEAH');
 })
 
 //registra una partida
@@ -49,6 +49,7 @@ app.put('/partidas/:id', async function (req, res)
     if(!id || !isNaN(id) || !marcador)
     {
       res.status(406).send('Parámetros no válidos');
+      console.log('Parámetros no válidos')
       return;
     }
 
@@ -58,6 +59,7 @@ app.put('/partidas/:id', async function (req, res)
       if(row['COUNT(1)'] === 0)
       {
         res.status(404).send('Partida no encontrada');
+        console.log('Partida no encontrada');
         return;
       }
       else
@@ -65,7 +67,7 @@ app.put('/partidas/:id', async function (req, res)
         let query = 'UPDATE Partida SET ganador = ? WHERE id = ?';
 
         db.run(query, [obj_marcador[0], id]);
-
+        console.log('Partida registrada correctamente.');
         res.status(201).send('Partida registrada correctamente.');
       }
     });
