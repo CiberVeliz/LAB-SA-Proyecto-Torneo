@@ -1,0 +1,11 @@
+version: "3.3"
+
+services:
+  tokenserver:
+    image: node
+    container_name: torneos
+    ports:
+      - 9000:3000
+    volumes: 
+      - ./app:/app
+    command: bash -c "cd /app/ && npm install && node /app/index.js"

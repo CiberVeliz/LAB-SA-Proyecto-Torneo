@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body onload="initTorneo()">
+    <div id="main-div" class="bracket">
+        <section class="round quarterfinals">
+            <div class="winners">
+                <div class="matchups">
+                    <div class="matchup">
+                        <div class="participants">
+                            <div class="participant winner"><span>Uno</span></div>
+                            <div class="participant"><span>Ocho</span></div>
+                        </div>
+                    </div>
+                    <div class="matchup">
+                        <div class="participants">
+                            <div class="participant"><span>Dos</span></div>
+                            <div class="participant winner"><span>Siete</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="connector">
+                    <div class="merger"></div>
+                    <div class="line"></div>
+                </div>
+            </div>
+            <div class="winners">
+                <div class="matchups">
+                    <div class="matchup">
+                        <div class="participants">
+                            <div class="participant"><span>Treis</span></div>
+                            <div class="participant winner"><span>Seis</span></div>
+                        </div>
+                    </div>
+                    <div class="matchup">
+                        <div class="participants">
+                            <div class="participant"><span>Cuatro</span></div>
+                            <div class="participant winner"><span>Cinco</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="connector">
+                    <div class="merger"></div>
+                    <div class="line"></div>
+                </div>
+            </div>
+        </section>
+        <section class="round semifinals">
+            <div class="winners">
+                <div class="matchups">
+                    <div class="matchup">
+                        <div class="participants">
+                            <div class="participant winner"><span>Uno</span></div>
+                            <div class="participant"><span>Dos</span></div>
+                        </div>
+                    </div>
+                    <div class="matchup">
+                        <div class="participants">
+                            <div class="participant winner"><span>Seis</span></div>
+                            <div class="participant"><span>Cinco</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="connector">
+                    <div class="merger"></div>
+                    <div class="line"></div>
+                </div>
+            </div>
+        </section>
+        <section class="round finals">
+            <div class="winners">
+                <div class="matchups">
+                    <div class="matchup">
+                        <div class="participants">
+                            <div class="participant winner"><span>Uno</span></div>
+                            <div class="participant"><span>Seis</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+
+<script>
+    function initTorneo()
+    {
+        let grupos = 1;
+        let jugadores = ['Juan', 'Jose', 'Pedro', 'Maria'];
+        let html_source = '';
+
+        jugadores = shake(jugadores);
+
+        if(grupos == 1)
+        {
+            html_source += `
+            <section class="round quarterfinals">
+            <div class="winners">
+                <div class="matchups">
+                    <div class="matchup">
+                        <div class="participants">
+                            <div class="participant winner"><span>` + jugadores[0] + `</span></div>
+                            <div class="participant"><span>` + jugadores[1] + `</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </section>`;
+            //document.getElementById('main-div').innerHTML = html_source;
+
+            return
+        }
+
+        for(let i = 0; i < grupos; i++)
+        {
+            html_source += `
+            <section class="round quarterfinals">
+            <div class="winners">
+                <div class="matchups">
+                    <div class="matchup">
+                        <div class="participants">
+                            <div class="participant winner"><span>` + jugadores[i] + `</span></div>
+                            <div class="participant"><span>` + jugadores[i + 1] + `</span></div>
+                        </div>
+                    </div>
+                    <div class="matchup">
+                        <div class="participants">
+                            <div class="participant"><span>` + jugadores[i + 2] + `</span></div>
+                            <div class="participant winner"><span>` + jugadores[i + 3] + `</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="connector">
+                    <div class="merger"></div>
+                    <div class="line"></div>
+                </div>
+            </div>
+            </section>`;
+        }
+
+        //document.getElementById('main-div').innerHTML = html_source;
+        console.log("INICIADO");
+    }
+
+    function shake(array)
+    {
+        var currentIndex = array.length, temporaryValue, randomIndex;
+
+        while (0 !== currentIndex) 
+        {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+
+        return array;
+}
+</script>
+
+</html>
