@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="stylesheets/style_keys.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 </head>
 <body onload="initTorneo()">
     <div id="main-div" class="bracket">
@@ -78,7 +79,7 @@
                     <div class="matchup">
                         <div class="participants">
                             <div class="participant winner"><span>Uno</span></div>
-                            <div class="participant"><span>Seis</span></div>
+                            <div class="participant loser"><span>Seis</span></div>
                         </div>
                     </div>
                 </div>
@@ -90,63 +91,78 @@
 <script>
     function initTorneo()
     {
-        let grupos = 1;
-        let jugadores = ['Juan', 'Jose', 'Pedro', 'Maria'];
+        let partidas = getObject("<%= partidas %>");
+
+        console.log(partidas);
+
         let html_source = '';
 
-        jugadores = shake(jugadores);
+        html_source += '<section class="round quarterfinals">';
 
-        if(grupos == 1)
+        for(let i = 0; i < partidas.length; i++)
         {
             html_source += `
-            <section class="round quarterfinals">
             <div class="winners">
                 <div class="matchups">
                     <div class="matchup">
                         <div class="participants">
-                            <div class="participant winner"><span>` + jugadores[0] + `</span></div>
-                            <div class="participant"><span>` + jugadores[1] + `</span></div>
+                            <div class="participant winner"><span>` + partidas[i].nombre_j1 + `</span></div>
+                            <div class="participant loser"><span>` + partidas[i].nombre_j2 + `</span></div>
                         </div>
                     </div>
                 </div>
-            </div>
-            </section>`;
-            //document.getElementById('main-div').innerHTML = html_source;
 
-            return
-        }
-
-        for(let i = 0; i < grupos; i++)
-        {
-            html_source += `
-            <section class="round quarterfinals">
-            <div class="winners">
-                <div class="matchups">
-                    <div class="matchup">
-                        <div class="participants">
-                            <div class="participant winner"><span>` + jugadores[i] + `</span></div>
-                            <div class="participant"><span>` + jugadores[i + 1] + `</span></div>
-                        </div>
-                    </div>
-                    <div class="matchup">
-                        <div class="participants">
-                            <div class="participant"><span>` + jugadores[i + 2] + `</span></div>
-                            <div class="participant winner"><span>` + jugadores[i + 3] + `</span></div>
-                        </div>
-                    </div>
-                </div>
                 <div class="connector">
                     <div class="merger"></div>
                     <div class="line"></div>
                 </div>
-            </div>
-            </section>`;
+
+            </div>`;
         }
 
+        /*html_source += `<div class="connector">
+                    <div class="merger"></div>
+                    <div class="line"></div>
+                </div>`;*/
+        html_source += '</section>';
+
+        html_source += '<section class="round quarterfinals">';
+        html_source += `
+            <div class="winners">
+                <div class="matchups">
+                    <div class="matchup">
+                        <div class="participants">
+                            <div class="participant winner"><span>` + 'AS' + `</span></div>
+                            <div class="participant loser"><span>` + 'asd' + `</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+            html_source += `
+            <div class="winners">
+                <div class="matchups">
+                    <div class="matchup">
+                        <div class="participants">
+                            <div class="participant winner"><span>` + 'AS' + `</span></div>
+                            <div class="participant loser"><span>` + 'asd' + `</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            html_source += '</section>';
         //document.getElementById('main-div').innerHTML = html_source;
         console.log("INICIADO");
     }
 
+    function getObject(value)
+    {
+        var aux = $('<textarea />').html(value).text();
+        
+        return JSON.parse(aux);
+    }
+
+    //lado de nodejs
     function shake(array)
     {
         var currentIndex = array.length, temporaryValue, randomIndex;
@@ -162,7 +178,7 @@
         }
 
         return array;
-}
+    }
 </script>
 
 </html>

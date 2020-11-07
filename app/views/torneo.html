@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="stylesheets/style_keys.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+</head>
+<body onload="initTorneo()">
+    <div class="wrapper" id="main-div">
+        <div class="item">
+          <div class="item-parent">
+            <p>?</p>
+          </div>
+          <div class="item-childrens">
+            <div class="item-child">
+                <div class="item">
+                    <div class="item-parent">
+                    <p>?</p>
+                    </div>
+                    <div class="item-childrens">
+                        <div class="item-child">
+                            <p>Jose <button onclick="location.href = '/generarPartida'">Jugar</button></p>
+                        </div>
+                        <div class="item-child">
+                            <p>Usuario <button onclick="location.href = '/generarPartida'">Jugar</button></p>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <div class="item-child">
+                <div class="item">
+                    <div class="item-parent">
+                    <p>?</p>
+                    </div>
+                    <div class="item-childrens">
+                    <div class="item-child">
+                        <p>usuario <button>Jugar</button></p>
+                    </div>
+                    <div class="item-child">
+                        <p>Tito <button>Jugar</button></p>
+                    </div>
+                    </div>
+                </div>
+                
+            </div>
+
+          </div>
+        </div>
+        
+      </div>
+</body>
+
+<script>
+    function initTorneo()
+    {
+        /*
+        <div class="item">
+          
+                    <div class="item-childrens">
+                    <div class="item-child">
+                        <p>child 1</p>
+                    </div>
+                    <div class="item-child">
+                        <p>child 2</p>
+                    </div>
+                
+            
+
+          </div>
+        </div>
+        */
+        let partidas = getObject("<%= partidas %>");
+        let niveles = Math.sqrt(partidas.length);
+
+        console.log(partidas);
+        console.log(niveles)
+        let html_source = '';
+
+
+        html_source += '<div class="item">';
+
+        /*for(let i = 0; i < niveles; i++)
+        {
+            html_source += getLevel(i, html_source, partidas.length);
+        }*/
+
+        html_source += getLevel(niveles, '');
+
+        html_source += '<div>';
+        //document.getElementById('main-div').innerHTML = html_source;
+
+        /*html_source += '<div class="item">';
+        //html_source += '<div class="item-childrens">';
+
+        
+
+        for(let i = 0; i < niveles; i++)
+        {
+            html_source += `
+                <div class="item-parent">
+                    <p>?</p>
+                </div>
+                <div class="item-childrens">
+            `;
+
+            for(let j = 0; j < (i + 1); j++)
+            {
+                html_source += `<div class="item-child">
+                                    <div class="item">
+                                        <div class="item-parent">
+                                        <p>?</p>
+                                        </div>
+                                        <div class="item-childrens">
+                                        <div class="item-child">
+                                            <p>child 1</p>
+                                        </div>
+                                        <div class="item-child">
+                                            <p>child 2</p>
+                                        </div>
+                                        </div>
+                                    </div>
+                                    
+                                </div>`;
+            }
+        }
+
+        for(let i = 0; i < niveles; i++)
+        {
+            html_source += `</div>`;
+        }*/
+
+        //html_source += '</div>';
+        //html_source += '</div>'
+        //document.getElementById('main-div').innerHTML = html_source;
+
+        /*html_source += '<section class="round quarterfinals">';
+
+        for(let i = 0; i < partidas.length; i++)
+        {
+            html_source += `
+            <div class="winners">
+                <div class="matchups">
+                    <div class="matchup">
+                        <div class="participants">
+                            <div class="participant winner"><span>` + partidas[i].nombre_j1 + `</span></div>
+                            <div class="participant loser"><span>` + partidas[i].nombre_j2 + `</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="connector">
+                    <div class="merger"></div>
+                    <div class="line"></div>
+                </div>
+
+            </div>`;
+        }
+
+        /*html_source += `<div class="connector">
+                    <div class="merger"></div>
+                    <div class="line"></div>
+                </div>`;*/
+        /*html_source += '</section>';
+
+        html_source += '<section class="round quarterfinals">';
+        html_source += `
+            <div class="winners">
+                <div class="matchups">
+                    <div class="matchup">
+                        <div class="participants">
+                            <div class="participant winner"><span>` + 'AS' + `</span></div>
+                            <div class="participant loser"><span>` + 'asd' + `</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+            html_source += `
+            <div class="winners">
+                <div class="matchups">
+                    <div class="matchup">
+                        <div class="participants">
+                            <div class="participant winner"><span>` + 'AS' + `</span></div>
+                            <div class="participant loser"><span>` + 'asd' + `</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            html_source += '</section>';*/
+        console.log("INICIADO");
+    }
+
+    function getLevel(level, content)
+    {
+        if(level === 0)
+        {
+            let result = '';
+
+            /*for(let i = 0; i < length / 2; i++)
+            {
+                */result += `<div class="item-childrens">
+                        <div class="item-child">
+                            <p>child 1</p>
+                        </div>
+                        <div class="item-child">
+                            <p>child 2</p>
+                        </div>
+                    </div>`;
+            /*}
+
+            console.log(result)
+                    */
+            return result;
+        }
+        else
+        {
+            return `<div class="item">
+                        <div class="item-parent">
+                            <p>?</p>
+                        </div>`+ getLevel(level-1, content) + `</div>`;
+        }
+    }
+
+    function getObject(value)
+    {
+        var aux = $('<textarea />').html(value).text();
+        
+        return JSON.parse(aux);
+    }
+
+    //lado de nodejs
+    function shake(array)
+    {
+        var currentIndex = array.length, temporaryValue, randomIndex;
+
+        while (0 !== currentIndex) 
+        {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+
+        return array;
+    }
+</script>
+
+</html>
