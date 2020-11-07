@@ -47,7 +47,14 @@ module.exports = function(app, session, db, db_bitacora)
             }
             else
             {
-               res.render('partidas.html');
+                db.all("SELECT id FROM Torneo WHERE estado = 1 LIMIT 1;",[],(errtor, rowstor ) => {
+                    
+                    db.all("SELECT *FROM Partida WHERE idTorneo = ?", [rowstor[0].id], (err, rows ) => {
+  
+                        res.render('torneo.html', {partidas: JSON.stringify(rows), adminUser: req.session.admin, idTorneo: rowstor[0].id});
+                        return
+                      });
+                }) 
             }
         }
         else
@@ -68,14 +75,14 @@ module.exports = function(app, session, db, db_bitacora)
         {
             db.all("SELECT *FROM Juego", [], (err, rows ) => {
             
-            axios.get(process.env.USERS_URL + '/jugadores', config)
-            .then((data) => {
-                db.all("SELECT *FROM Torneo WHERE estado = 1 LIMIT 1;",[],(errtor, rowstor ) => {
-                
-                res.render('torneos.html', {juegos: JSON.stringify(rows), torneoActual: JSON.stringify(rowstor), msg: getMessage(req), users: JSON.stringify(data.data)});
+                axios.get(process.env.USERS_URL + '/jugadores', config)
+                .then((data) => {
+                    db.all("SELECT *FROM Torneo WHERE estado = 1 LIMIT 1;",[],(errtor, rowstor ) => {
+                    
+                    res.render('torneos.html', {juegos: JSON.stringify(rows), torneoActual: JSON.stringify(rowstor), msg: getMessage(req), users: JSON.stringify(data.data)});
 
-                }) 
-            });
+                    }) 
+                });
             });
         }
         else

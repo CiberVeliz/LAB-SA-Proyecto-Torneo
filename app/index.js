@@ -224,17 +224,13 @@ app.post('/login', function(req, res)
 //------------- PARTIDAS ----------------------
 
 //simula una partida
-app.get( process.env.JUEGOS_URL + '/simularPartida', async function(req, res)
+app.get( '/simularPartida', async function(req, res)
 {
-    let idPartida = uuid.v4();
-    let data = {id: idPartida, jugadores: [3, 5]};
+    let params = req.query;
 
-    //se almacena la partida en la base
-    let query = 'INSERT INTO Partida(id, jugador1, jugador2) VALUES(?, ?, ?)';
+    let data = {id: params.id, jugadores: [params.j1, params.j2]}
 
-    db.run(query, [idPartida, 3, 5]);
-
-    registrarBitacora("Registro partida", "Se registro la partida " + idPartida)
+    registrarBitacora("Inicio partida", "Se inicio la partida " + params.id)
 
     axios.post(process.env.JUEGOS_URL  + '/simular', data).then((result) => {
 
@@ -293,6 +289,24 @@ app.put('/partidas/:id', function (req, res)
 
         registrarBitacora("Registro", "Se registro la partida " + id)
 
+        //se registra al ganador
+        let idPartida = uuid.v4();
+
+        let jugador;
+        
+        if(marcador === '1')
+        {
+          jugador = "SELECT jugador1 FROM partida WHERE id= '" + id + "'";
+        }
+        else
+        {
+          jugador = "SELECT jugador2 FROM partida WHERE id= '" + id + "'";
+        }
+
+        let query2 = "INSERT INTO Partida(id, jugador1, nivel, idTorneo) VALUES(?, (" + jugador + "), (SELECT (nivel + 1) FROM Partida WHERE id = '" + id + "'), (SELECT COUNT(1) FROM Torneo))";
+
+        db.run(query2, [idPartida]);
+
         res.status(201).send('Partida registrada correctamente.');
       }
     });
@@ -342,6 +356,37 @@ app.get('/generarPartida', function (req, res)
     })
 }); 
 
+function getNormalUsers(users)
+{
+  let regularUsers = [];
+  
+  for(let i = 0; i < users.length; i++)
+  {
+    if(users[i].administrador === 0)
+    {
+      regularUsers.push(users[i]);
+    }
+  }
+
+  return regularUsers;
+}
+
+function shakeUsers(array)
+{
+    var currentIndex = array.length, temporaryValue, randomIndex;
+
+    while (0 !== currentIndex) 
+    {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+    }
+
+    return array;
+}
 
 app.post('/crearTorneo', function(req, res)
 {
@@ -356,17 +401,45 @@ app.post('/crearTorneo', function(req, res)
     }
     else
     {
-      //se guarda el juego
-      let query = 'INSERT INTO Torneo(nombre, cantidad_grupos, ip_juego, estado) VALUES(?, ?, ?, ?)';
+      const config = {
+        headers: { Authorization: `Bearer ${req.session.usersToken}` }
+      };
 
-      db.run(query, [data.name, data.cantidad, data.games, 1]);
+      //se obtiene a todos los usuarios
+      axios.get(process.env.USERS_URL + '/jugadores', config)
+      .then((result) => {
+        let users = result.data;
+        let normalUsers = getNormalUsers(users);
+        normalUsers = shakeUsers(normalUsers);
 
-      // se crean las llaves
-      req.session.msg = "Torneo creado exitosamente.";
+        const selectedUsers = normalUsers.slice(0, parseInt(data.cantidad) * 2)//grupos * 2 = 2 jugadores por grupo
+        
+        //se guarda el juego
+        let query = 'INSERT INTO Torneo(nombre, cantidad_grupos, ip_juego, estado) VALUES(?, ?, ?, ?)';
 
-      registrarBitacora("Registro", "Se registró el torneo " + data.name)
-      res.redirect('/torneos');
-      return
+        db.run(query, [data.name, data.cantidad, data.games, 1]);
+
+        // se crean las llaves
+        for(let i = 0; i < selectedUsers.length; i+=2)
+        {
+          let id_j1 = selectedUsers[i].id;
+          let id_j2 = selectedUsers[i + 1].id;
+          let idPartida = uuid.v4();
+
+          let query = 'INSERT INTO Partida(id, jugador1, jugador2, nivel, idTorneo) VALUES(?, ?, ?, ?, (SELECT COUNT(1) FROM Torneo))';
+
+          registrarBitacora("Registro", "Se registro la partida " + idPartida)
+  
+          db.run(query, [idPartida, id_j1, id_j2, 1]);
+
+        }
+
+        req.session.msg = "Torneo creado exitosamente.";
+
+        registrarBitacora("Registro", "Se registró el torneo " + data.name)
+        res.redirect('/torneos');
+        return
+      });
     }
   });
 });
@@ -379,17 +452,36 @@ app.post('/verTorneo', function(req, res){
 
 app.get('/torneo', function(req, res)
 {
-  let idTorneo = req.session.idTorneo;
+  let user = req.session.mail;
+        
+  if(user)
+  {
+    let idTorneo = req.session.idTorneo;
 
-  let partidas = [
-                  {id_j1: 1, nombre_j1: 'temp1', id_j2: 2, nombre_j2: 'temp2'},
-                  {id_j1: 3, nombre_j1: 'temp3', id_j2: 4, nombre_j2: 'temp4'},
-                  {id_j1: 5, nombre_j1: 'temp5', id_j2: 6, nombre_j2: 'temp6'},
-                  {id_j1: 7, nombre_j1: 'temp7', id_j2: 8, nombre_j2: 'temp8'}
-                  ]
+    //se obtienen las partidas asociadas a ese torneo
+    db.all("SELECT *FROM Partida WHERE idTorneo = ?", [idTorneo], (err, rows ) => {
+  
+      res.render('torneo.html', {partidas: JSON.stringify(rows), adminUser: req.session.admin, idTorneo: idTorneo});
+      return
+    });
+  }
+  else
+  {
+      res.redirect('/');
+  }
+})
 
-  //se obtienen las partidas asociadas a ese torneo
-  res.render('torneo.html', {partidas: JSON.stringify(partidas)});
+app.post('/terminarTorneo', function(req, res)
+{
+  let idTorneo = req.body.idTorneo;
+
+  let query = 'UPDATE Torneo SET estado = ? WHERE id = ?';
+
+  db.run(query, [2, idTorneo]);
+
+  req.session.msg = "Torneo finalizado exitosamente.";
+
+  res.redirect('/torneos');
 })
 
 app.listen('3000', function() {

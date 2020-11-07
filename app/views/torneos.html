@@ -110,6 +110,7 @@
 <script>
     let users = [];
     let torneoActual = {};
+    let normalUsers = []
 
     function init()
     {
@@ -140,7 +141,17 @@
 
         users = getObject("<%= users %>");
 
-        document.getElementById('cantidadInfo').innerText = 'Jugadores disponibles: ' + users.length;
+        normalUsers = [];
+
+        for(let i = 0; i < users.length; i++)
+        {
+            if(users[i].administrador === 0)
+            {
+                normalUsers.push(users[i]);
+            }
+        }
+
+        document.getElementById('cantidadInfo').innerText = 'Jugadores disponibles: ' + normalUsers.length;
 
         if(Object.keys(torneoActual).length === 0)
         {
@@ -202,13 +213,13 @@
 
         if(PowerofTwo(num))
         {
-            if(users.length >= num * 2)
+            if(normalUsers.length >= num * 2)
             {
                 return true;
             }
             else
             {
-                showSnackbar("Error se requiren " + num * 2 + " y solo hay " + users.length + " jugadores.");
+                showSnackbar("Error se requiren " + num * 2 + " y solo hay " + normalUsers.length + " jugadores.");
                 return false;
             }
         }
