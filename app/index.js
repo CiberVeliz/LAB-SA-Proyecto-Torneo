@@ -312,10 +312,15 @@ app.post('/login', function(req, res)
 })*/
 
 //genera un partida
-app.get('/simularPartida', function(req, res)
+app.get('/simularPartida', async function(req, res)
 {
     let idPartida = uuid.v4();
     let data = {id: idPartida, jugadores: [3, 5]};
+
+    //se almacena la partida en la base
+    let query = 'INSERT INTO Partida(id, jugador1, jugador2) VALUES(?, ?, ?)';
+
+    db.run(query, [idPartida, 3, 5]);
 
     axios.post('http://34.70.148.27:5000/simular', data).then((result) => {
 
@@ -323,10 +328,6 @@ app.get('/simularPartida', function(req, res)
       if (result.status === 201)
       {
         req.session.msg = 'Partida simulada.'
-        //se almacena la partida en la base
-        let query = 'INSERT INTO Partida(id, jugador1, jugador2) VALUES(?, ?, ?)';
-
-        db.run(query, [idPartida, 3, 5]);
 
         res.redirect('/torneo');
         return
@@ -349,7 +350,7 @@ app.get('/simularPartida', function(req, res)
 })
 
 //registra una partida
-app.put('/partidas/:id', async function (req, res) 
+app.put('/partidas/:id', function (req, res) 
 {
     var id = req.params.id;
     var marcador = req.body.marcador;
@@ -361,7 +362,7 @@ app.put('/partidas/:id', async function (req, res)
       return;
     }
 
-    await db.get("SELECT COUNT(1) FROM Partida WHERE id = $id", {$id: id}, (error, row) => {
+    db.get("SELECT COUNT(1) FROM Partida WHERE id = $id", {$id: id}, (error, row) => {
       if(row['COUNT(1)'] === 0)
       {
         res.status(404).send('Partida no encontrada');
