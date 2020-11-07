@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitacora - Torneos</title>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+</head>
+<body onload="init()">
+    
+    <table class="w3-table w3-striped w3-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Acción</th>
+                <th>Fecha</th>
+                <th>Descripción</th>
+              </tr>
+        </thead>
+        <tbody id="contentTable">
+
+        </tbody>
+    </table>
+
+</body>
+
+<script>
+    function init()
+    {
+        let bitacora = getObject("<%= bitacora %>");
+        let content = '';
+
+        for(let i = 0; i < bitacora.length; i++)
+        {
+            let b = bitacora[i];
+            content += `<tr>
+                            <td>` + b.id + `</td>
+                            <td>` + b.accion + `</td>
+                            <td>` + b.fecha + `</td>
+                            <td>` + b.descripcion + `</td>
+                        </tr>`
+        }
+
+        document.getElementById("contentTable").innerHTML = content;
+    }
+
+    function getObject(value)
+    {
+        var aux = $('<textarea />').html(value).text();
+        
+        return JSON.parse(aux);
+    }
+</script>
+
+</html>

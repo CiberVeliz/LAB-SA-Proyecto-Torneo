@@ -1,22 +1,18 @@
 const express = require('express');
 const app = express();
 var uuid = require('uuid');//uuid.v4()
-let fetch = require('node-fetch');
 const axios = require('axios')
+require('dotenv').config(); //env file
+
+const session = require('express-session');
+app.use(session({secret: process.env.SECRET_SESSION, saveUninitialized: true, resave: true}));
 
 var bodyParser = require('body-parser');
-const session = require('express-session');
-app.use(session({secret: 'sa_g1',saveUninitialized: true,resave: true}));
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended: true
 }));
 
-/*app.use(function(req, res, next) {
-  res.setHeader("Content-Type", "text/html");
-  next();
-});*/
 
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -40,9 +36,26 @@ let db = new sqlite3.Database('./database/database.db', (err) => {
   console.log('Conexión realizada.');
 });
 
+// open database - bitacora
+let db_bitacora = new sqlite3.Database('./database/bitacora.db', (err) => {
+  if (err) {
+    console.error(err.message);
+  }
+  console.log('Conexión a bitacora realizada.');
+});
+
 // -------------------------------------------------------------------------
 
+require('./modules/views')(app, session, db, db_bitacora);
+
 // --------------------- FUNCIONAMIENTO TORNEOS -----------------------------
+
+function registrarBitacora(accion, descripcion)
+{
+  let query = 'INSERT INTO Bitacora(accion, descripcion) VALUES(?, ?)';
+
+  db_bitacora.run(query, [accion, descripcion]);
+}
 
 app.post('/saveGame', function(req, res)
 {
@@ -51,6 +64,8 @@ app.post('/saveGame', function(req, res)
   db.get(query, {$nombre:req.body.name, $ip: req.body.IP}, (error, row) => {
     if(row['COUNT(1)'] === 0)
     {
+      registrarBitacora("Guardar Juego", "Se guardo el juego " + req.body.name)
+
       let query = 'INSERT INTO Juego(nombre, ip) VALUES(?, ?)';
 
       db.run(query, [req.body.name, req.body.IP]);
@@ -69,128 +84,15 @@ app.post('/saveGame', function(req, res)
   });
 });
 
-// ----------paginas
-
-function getMessage(req)
-{
-  let msg = req.session.msg;
-  req.session.msg = '';
-
-  return msg;
-}
-
-app.get('/', function(req, res)
-{
-  
-  //se obtiene el secret y id del .env
-  //se obtiene el token
-  axios.get('http://34.70.148.27:8081/token?id=3&secret=XcFYyQAj')
-  .then((result) => {
-    req.session.usersToken = result.data.token;
-    console.log(result.data.token)
-  })
-  .catch((err) =>{
-    console.log(err)
-  })
-
-  res.render('index_.html', {msg: getMessage(req)});
-});
-
-app.get('/torneos', function(req, res)
-{
-  const config = {
-    headers: { Authorization: `Bearer ${'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDQ3NjA3OTIsImlkIjoiSEkiLCJpc3MiOiJzYV9nMSJ9.Y1JhwdGnUmYFHNYF5MJX_PqaKyE-CmFoVnAf4P8F1ViAph7c1zZmiJjsPngYmiz_8hRaSHw0hU-Oi2cAAah8_CyvOgiblI0cpXixwBghsEbw42vwgWYtlGmub3YIq7v3y-YivAIy8-5utdDPQXf5JS3dlewLQm42LmDw4tvWStS1MzKfPf1yhZj-1ko-Q5ajDodhlnYY-zyCLEVOMRDpT6uBx3hahw6P1xT1wLvWp6YJAb4D2A5BMvUn-DfOjwQGRSIzrck77tC_hhAd6bbEYq8Cvzgd6My_ApZBk6-HGrJHm76QAlUwvWaaPN2MlXDq94u0Rt1IXl3-PyjwpJXrNQ'}` }
-  };
-
-  let isAdmin = req.session.admin;
-
-  if(isAdmin)
-  {
-    db.all("SELECT *FROM Juego",[],(err, rows ) => {
-      
-      axios.get('http://18.191.208.8:3050/jugadores', config)
-      .then((data) => {
-        db.all("SELECT *FROM Torneo WHERE estado = 1 LIMIT 1;",[],(errtor, rowstor ) => {
-          
-          res.render('torneos.html', {juegos: JSON.stringify(rows), torneoActual: JSON.stringify(rowstor), msg: getMessage(req), users: JSON.stringify(data.data)});
-
-        }) 
-      });
-    });
-  }
-  else
-  {
-    res.redirect('/');
-  }
-});
-
-app.get('/main', function(req, res)
-{
-  let user = req.session.mail;
-  
-  if(user)
-  {
-    let isAdmin = req.session.admin;
-
-    if(isAdmin)
-    {
-      res.render('main.html');
-    }
-    else
-    {
-      res.render('partidas.html');
-    }
-  }
-  else
-  {
-    res.redirect('/');
-  }
-});
-
-
-//----------- options -------------------
-app.get('/users', function(req, res)
-{
-  const config = {
-    headers: { Authorization: `Bearer ${'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDQ3NjA3OTIsImlkIjoiSEkiLCJpc3MiOiJzYV9nMSJ9.Y1JhwdGnUmYFHNYF5MJX_PqaKyE-CmFoVnAf4P8F1ViAph7c1zZmiJjsPngYmiz_8hRaSHw0hU-Oi2cAAah8_CyvOgiblI0cpXixwBghsEbw42vwgWYtlGmub3YIq7v3y-YivAIy8-5utdDPQXf5JS3dlewLQm42LmDw4tvWStS1MzKfPf1yhZj-1ko-Q5ajDodhlnYY-zyCLEVOMRDpT6uBx3hahw6P1xT1wLvWp6YJAb4D2A5BMvUn-DfOjwQGRSIzrck77tC_hhAd6bbEYq8Cvzgd6My_ApZBk6-HGrJHm76QAlUwvWaaPN2MlXDq94u0Rt1IXl3-PyjwpJXrNQ'}` }
-  };
-  let isAdmin = req.session.admin;
-
-  if(isAdmin)
-  {
-    //fetch
-    axios.get('http://18.191.208.8:3050/jugadores', config)
-    .then((data) => {
-      res.render('users.html', {users: JSON.stringify(data.data), msg: getMessage(req)});
-    });
-  }
-  else
-  {
-    res.redirect('/');
-  }
-});
-
-
-// ---------------------------------------
-
-app.get('/administrar', function(req, res)
-{
-  let isAdmin = req.session.admin;
-
-  if(isAdmin)
-  {
-    res.render('administrar.html');
-  }
-  else
-  {
-    res.redirect('/');
-  }
-});
+// ---------- endpoints -----------------
 
 app.post('/logout', function(req, res)
 {
+  registrarBitacora("Logout", "El usuario " + req.session.userid + " cerro sesión");
+
   req.session.admin = null;
   req.session.mail = null;
+  req.session.userid = null;
 
   res.redirect('/');
 });
@@ -200,7 +102,7 @@ app.post('/jugadores', function(req, res)
   let body = req.body;
   let type = body.type;
   let tempId = body.id;
-  let endpoint = 'http://18.191.208.8:3050/jugadores/'
+  let endpoint = process.env.USERS_URL + '/jugadores/'
 
   body.id = 0;
   body.administrador = body.administrador == 'on';
@@ -221,6 +123,8 @@ app.post('/jugadores', function(req, res)
       {
         req.session.msg = 'Datos invalidos';
       }
+
+      registrarBitacora("Consulta", "consulta al endpoint " + endpoint)
 
       res.redirect('/users');
       return
@@ -248,6 +152,8 @@ app.post('/jugadores', function(req, res)
         req.session.msg = 'Datos invalidos';
       }
 
+      registrarBitacora("Consulta", "consulta al endpoint " + endpoint + tempId)
+
       res.redirect('/users');
       return
     
@@ -267,15 +173,15 @@ app.post('/jugadores', function(req, res)
 app.post('/login', function(req, res)
 {
   const config = {
-    headers: { Authorization: `Bearer ${'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDQ3NjA3OTIsImlkIjoiSEkiLCJpc3MiOiJzYV9nMSJ9.Y1JhwdGnUmYFHNYF5MJX_PqaKyE-CmFoVnAf4P8F1ViAph7c1zZmiJjsPngYmiz_8hRaSHw0hU-Oi2cAAah8_CyvOgiblI0cpXixwBghsEbw42vwgWYtlGmub3YIq7v3y-YivAIy8-5utdDPQXf5JS3dlewLQm42LmDw4tvWStS1MzKfPf1yhZj-1ko-Q5ajDodhlnYY-zyCLEVOMRDpT6uBx3hahw6P1xT1wLvWp6YJAb4D2A5BMvUn-DfOjwQGRSIzrck77tC_hhAd6bbEYq8Cvzgd6My_ApZBk6-HGrJHm76QAlUwvWaaPN2MlXDq94u0Rt1IXl3-PyjwpJXrNQ'}` }
+    headers: { Authorization: `Bearer ${req.session.usersToken}` }
   };
 
   let username = req.body.user;
   let password = req.body.password;
 
-  axios.get('http://18.191.208.8:3050/login?email=' + username + '&password=' + password, config)
+  axios.get( process.env.USERS_URL + '/login?email=' + username + '&password=' + password, config)
   .then((result) => {
-    if(!result.data.email/*result.status === 400*/)//----------------------------------------- CAMBIAR EL CODIGO DE ERROR
+    if(result.status === 400)
     {
       req.session.msg = "Credenciales Inválidas.";
       return res.redirect('/');
@@ -287,11 +193,20 @@ app.post('/login', function(req, res)
     req.session.mail = data.email;
     req.session.userid = data.id;
 
+    registrarBitacora("Login", "Ingreso del usuario " + data.id + " al sistema.")
+
     res.redirect('/main');
   })
   .catch((error) => {
-    console.log(error);
-    req.session.msg = "Error al verificar los datos del usuario.";
+    console.log(error)
+    if(error.response.status === 400)
+    {
+      req.session.msg = "Credenciales Inválidas.";
+    }
+    else
+    {
+      req.session.msg = "Error al verificar los datos del usuario.";
+    }
     return res.redirect('/');
   })
 
@@ -302,17 +217,8 @@ app.post('/login', function(req, res)
 
 //------------- PARTIDAS ----------------------
 
-//genera un partida
-/*app.get('/generarPartida', function(req, res)
-{
-  let id = uuid.v4();
-  console.log(id);
-
-  res.status(200).send('YEAH');
-})*/
-
-//genera un partida
-app.get('/simularPartida', async function(req, res)
+//simula una partida
+app.get( process.env.JUEGOS_URL + '/simularPartida', async function(req, res)
 {
     let idPartida = uuid.v4();
     let data = {id: idPartida, jugadores: [3, 5]};
@@ -322,9 +228,12 @@ app.get('/simularPartida', async function(req, res)
 
     db.run(query, [idPartida, 3, 5]);
 
-    axios.post('http://34.70.148.27:5000/simular', data).then((result) => {
+    registrarBitacora("Registro partida", "Se registro la partida " + idPartida)
 
-      console.log(result);
+    axios.post(process.env.JUEGOS_URL  + '/simular', data).then((result) => {
+
+      registrarBitacora("Consulta", "consulta al endpoint " + process.env.JUEGOS_URL  + '/simular')
+
       if (result.status === 201)
       {
         req.session.msg = 'Partida simulada.'
@@ -375,6 +284,9 @@ app.put('/partidas/:id', function (req, res)
 
         db.run(query, [marcador[0], id]);
         console.log('Partida registrada correctamente.');
+
+        registrarBitacora("Registro", "Se registro la partida " + id)
+
         res.status(201).send('Partida registrada correctamente.');
       }
     });
@@ -389,16 +301,21 @@ app.get('/generarPartida', function (req, res)
  
     let data = {id: idPartida, jugadores: [3, 5]};
 
-    axios.post('http://34.70.148.27:5000/generar', data).then((result) => {
+    axios.post( process.env.JUEGOS_URL + '/generar', data).then((result) => {
 
       if (result.status === 201)
       {
         //se almacena la partida en la base
         let query = 'INSERT INTO Partida(id, jugador1, jugador2) VALUES(?, ?, ?)';
 
+        registrarBitacora("Registro", "Se registro la partida " + idPartida)
+
         db.run(query, [idPartida, 3, 5]);
 
         let url = 'http://34.70.148.27:3100/jugar/' + idPartida + '/' + req.session.userid + '/' + req.session.admin + '/1/1'
+
+        registrarBitacora("Redirect", "Se redireccionó hacia la url " + url)
+
         res.redirect(url);
         return
       }
@@ -440,6 +357,8 @@ app.post('/crearTorneo', function(req, res)
 
       // se crean las llaves
       req.session.msg = "Torneo creado exitosamente.";
+
+      registrarBitacora("Registro", "Se registró el torneo " + data.name)
       res.redirect('/torneos');
       return
     }
