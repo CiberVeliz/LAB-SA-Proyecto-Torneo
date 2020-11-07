@@ -120,7 +120,7 @@ module.exports = function(app, session, db, db_bitacora)
 
     app.get('/bitacora', function(req, res)
     {
-        db_bitacora.all("SELECT *FROM Bitacora", [], (err, rows ) => {
+        db_bitacora.all("SELECT *FROM Bitacora ORDER BY fecha DESC", [], (err, rows ) => {
             res.render('bitacora.html', {bitacora: JSON.stringify(rows)});
         })
     })

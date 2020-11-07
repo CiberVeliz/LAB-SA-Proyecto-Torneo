@@ -99,6 +99,12 @@ app.post('/logout', function(req, res)
 
 app.post('/jugadores', function(req, res)
 {
+  if(!req.body)
+  {
+    res.status(404);
+    return
+  }
+
   const config = {
     headers: { Authorization: `Bearer ${req.session.usersToken}` }
   };
