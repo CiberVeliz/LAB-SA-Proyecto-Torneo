@@ -99,6 +99,10 @@ app.post('/logout', function(req, res)
 
 app.post('/jugadores', function(req, res)
 {
+  const config = {
+    headers: { Authorization: `Bearer ${req.session.usersToken}` }
+  };
+
   let body = req.body;
   let type = body.type;
   let tempId = body.id;
@@ -110,7 +114,7 @@ app.post('/jugadores', function(req, res)
 
   if(type == "POST")
   {
-    axios.post(endpoint, body).then((result) => {
+    axios.post(endpoint, body, config).then((result) => {
       if (result.status === 201)
       {
         req.session.msg = 'Usuario creado exitosamente.'
@@ -124,8 +128,6 @@ app.post('/jugadores', function(req, res)
         req.session.msg = 'Datos invalidos';
       }
 
-      registrarBitacora("Consulta", "consulta al endpoint " + endpoint)
-
       res.redirect('/users');
       return
 
@@ -138,7 +140,7 @@ app.post('/jugadores', function(req, res)
   }
   else
   {
-    axios.put(endpoint + tempId, body).then((result) => {
+    axios.put(endpoint + tempId, body, config).then((result) => {
       if (result.status === 201)
       {
         req.session.msg = 'Usuario modificado exitosamente.'
@@ -151,8 +153,6 @@ app.post('/jugadores', function(req, res)
       {
         req.session.msg = 'Datos invalidos';
       }
-
-      registrarBitacora("Consulta", "consulta al endpoint " + endpoint + tempId)
 
       res.redirect('/users');
       return
